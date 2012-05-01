@@ -72,7 +72,7 @@ def infer_basis(px,
     "Online Dictionary Learning for Sparse Coding."
     '''
     # initialize the codebook with elements from our sample space.
-    D = numpy.array([px() for _ in xrange(num_codebooks)]):
+    D = numpy.array([px() for _ in xrange(num_codebooks)])
 
     # set up storage matrices for the learning algorithm.
     A = numpy.zeros((num_codebooks, num_codebooks), float)
