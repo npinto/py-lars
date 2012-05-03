@@ -33,13 +33,12 @@ def infer_basis(px,
                 resample_every=None, resample_percentile=None):
     '''Given a distribution of data, compute an efficient basis.
 
-    This function generates a sequence of basis dictionaries, each more
-    efficient than the last for encoding elements drawn from p(x). The
-    dictionaries have num_codebooks rows and the same number of columns as the
-    length of elements returned by p(x).
+    Arguments
+    ---------
 
-    px is a callable that takes no arguments and returns a 1-dimensional array
-    of observed data. The training process will halt whenever px() returns None.
+    px: A callable that takes no arguments and returns a 1-dimensional array of
+    observed data. The dimensionality of this array must be constant. The
+    training process will halt whenever px() returns None.
 
     num_codebooks: Use this many elements (rows) in the basis.
 
@@ -68,11 +67,26 @@ def infer_basis(px,
     the absolute sum of the coefficients that have been used with that
     dictionary element.
 
+    Result
+    ------
+
+    This function generates a sequence of basis dictionaries, each more
+    efficient than the last for encoding elements drawn from p(x). Each
+    dictionary has num_codebooks rows and the same number of columns as the
+    length of elements returned by p(x).
+
+    Attribution
+    -----------
+
     This algorithm is implemented from Mairal, Bach, Ponce, and Sapiro (2009),
     "Online Dictionary Learning for Sparse Coding."
     '''
     # initialize the codebook with elements from our sample space.
     D = numpy.array([px() for _ in xrange(num_codebooks)])
+
+    # normalize codebook vectors.
+    for x in D:
+        x /= numpy.linalg.norm(x)
 
     # set up storage matrices for the learning algorithm.
     A = numpy.zeros((num_codebooks, num_codebooks), float)
@@ -118,13 +132,13 @@ def infer_basis(px,
             except:
                 continue
 
-            alpha = coeffs[:, -1].reshape((N, 1))
+            alpha = coeffs[:, -1].reshape((len(coeffs[:, -1]), 1))
             A += numpy.dot(alpha, alpha.T).T
             B += numpy.dot(x.reshape((len(x), 1)), alpha.T).T
             usage += abs(alpha).flatten()
 
         # algorithm 2 -- repeatedly increment basis vectors.
-        for _ in xrange(learning_iters):
+        for _ in xrange(learning_iterations):
             D_[:] = D
             for j, (d, a, b) in enumerate(zip(D, A, B)):
                 # eq 10
