@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name='lmj.lars',
-    version='0.1',
+    version='0.2',
     namespace_packages=['lmj'],
     packages=setuptools.find_packages(),
     author='Leif Johnson',
