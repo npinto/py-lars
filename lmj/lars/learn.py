@@ -81,8 +81,10 @@ def infer_basis(px,
     This algorithm is implemented from Mairal, Bach, Ponce, and Sapiro (2009),
     "Online Dictionary Learning for Sparse Coding."
     '''
+    x = px()
+
     # initialize the codebook with elements from our sample space.
-    D = numpy.array([px() for _ in xrange(num_codebooks)])
+    D = numpy.random.randn(num_codebooks, len(x))
 
     # normalize codebook vectors.
     for x in D:
@@ -97,21 +99,24 @@ def infer_basis(px,
     usage = numpy.zeros((num_codebooks, ), float)
 
     # limiting the number of codebook elements that are used for the encoding.
-    max_features = int(num_codebooks * sparsity)
+    max_features = max(1, int(num_codebooks * sparsity))
 
     # if resampling is enabled, calculate the number of elements to resample.
     num_resample = 0
     if 0 < resample_percentile < 1:
-        num_resample = int(num_codebooks * resample_percentile)
+        num_resample = max(1, int(num_codebooks * resample_percentile))
 
     t = 0
     while True:
+        yield D
+
         t += 1
 
         # resample the lowest-use elements of D with samples from our space.
         if resample_every and not t % resample_every:
             for i in usage.argsort()[:num_resample]:
                 D[i] = px()
+                D[i] /= numpy.linalg.norm(D[i])
             usage[:] = 0
 
         # eq 11 -- mini-batch extension
@@ -148,4 +153,4 @@ def infer_basis(px,
             if numpy.linalg.norm(D - D_) < learning_threshold:
                 break
 
-        yield D
+    yield D
